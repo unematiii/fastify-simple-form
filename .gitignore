@@ -1,0 +1,17 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Build files
+index.js
+index.d.ts
+
+# Coverage
+coverage/
+
+# Misc
+.DS_Store
