@@ -11,21 +11,25 @@ export interface FormPluginOptions extends busboy.BusboyConfig {
 export const requestParser = (options?: busboy.BusboyConfig) => (
   req: FastifyRequest,
 ): Promise<Record<string, string>> =>
-  new Promise((resolve) => {
-    const request = req.raw;
+  new Promise((resolve, reject) => {
+    try {
+      const request = req.raw;
 
-    const body: Record<string, string> = {};
-    const bb = new busboy(merge({ headers: request.headers }, cloneDeep(options)));
+      const body: Record<string, string> = {};
+      const bb = new busboy(merge({ headers: request.headers }, cloneDeep(options)));
 
-    bb.on('field', (field, value) => {
-      if (!Object.getOwnPropertyDescriptor(Object.prototype, field)) {
-        body[field] ||= value;
-      }
-    });
+      bb.on('field', (field, value) => {
+        if (!Object.getOwnPropertyDescriptor(Object.prototype, field)) {
+          body[field] ||= value;
+        }
+      });
+      bb.on('finish', () => resolve(body));
+      bb.on('error', (error: unknown) => reject(error));
 
-    bb.on('finish', () => resolve(body));
-
-    request.pipe(bb);
+      request.pipe(bb);
+    } catch (error) {
+      reject(error);
+    }
   });
 
 const defaultOptions: FormPluginOptions = {
