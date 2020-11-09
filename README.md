@@ -14,6 +14,13 @@ NB! This plugin does not handle `files`, these get simply discarded as described
 npm install fastify-simple-form
 ```
 
+## TypeScript
+
+Although this package includes typings for the plugin itself, you must install ones for node.js and busboy manually:
+```
+npm install @types/node @types/busboy --save-dev
+```
+
 ## Usage & Options
 
 ### Selectively enable content types to parse
