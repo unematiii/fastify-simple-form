@@ -16,7 +16,7 @@ export const requestParser = (options?: busboy.BusboyConfig) => (
       const request = req.raw;
 
       const body: Record<string, string> = {};
-      const bb = new busboy(merge({ headers: request.headers }, cloneDeep(options)));
+      const bb = new busboy(merge({ headers: request.headers }, options));
 
       bb.on('field', (field, value) => {
         if (!Object.getOwnPropertyDescriptor(Object.prototype, field)) {
@@ -37,8 +37,11 @@ const defaultOptions: FormPluginOptions = {
   urlencoded: true,
 };
 
+const getOptions = (options?: FormPluginOptions): Omit<FormPluginOptions, 'headers'> =>
+  merge({}, defaultOptions, omit(cloneDeep(options || {}), ['headers']));
+
 export const formPlugin: FastifyPluginAsync<FormPluginOptions> = async (instance, options: FormPluginOptions) => {
-  const { multipart, urlencoded, ...rest } = merge(defaultOptions, options);
+  const { multipart, urlencoded, ...rest } = getOptions(options);
 
   const contentTypes = [
     ...(multipart ? ['multipart/form-data'] : []),
@@ -46,7 +49,7 @@ export const formPlugin: FastifyPluginAsync<FormPluginOptions> = async (instance
   ];
 
   if (contentTypes.length) {
-    instance.addContentTypeParser(contentTypes, requestParser(omit(rest, ['headers'])));
+    instance.addContentTypeParser(contentTypes, requestParser(rest));
   }
 };
 

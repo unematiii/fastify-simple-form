@@ -1,6 +1,6 @@
 {
   "name": "fastify-simple-form",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Adds content type parser for the application/x-www-form-urlencoded and multipart/form-data content types",
   "main": "index.js",
   "files": [
