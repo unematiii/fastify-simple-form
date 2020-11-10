@@ -1,5 +1,8 @@
 # fastify-simple-form
 
+[![Build Status](https://travis-ci.org/unematiii/fastify-simple-form.svg)](https://travis-ci.org/unematiii/fastify-simple-form)
+[![Coverage Status](https://coveralls.io/repos/github/unematiii/fastify-simple-form/badge.svg)](https://coveralls.io/github/unematiii/fastify-simple-form)
+
 Fastify plugin that adds content type parser for the `application/x-www-form-urlencoded` and/or `multipart/form-data` types.
 
 ## Description
