@@ -55,11 +55,11 @@ Given server & handler:
 
 ```js
 import Fastify from 'fastify';
-import parseForm from 'fastify-simple-form';
+import SimpleFormPlugin from 'fastify-simple-form';
 
 const fastify = Fastify();
 
-fastify.register(parseForm);
+fastify.register(SimpleFormPlugin);
 
 fastify.post(
   '/token',

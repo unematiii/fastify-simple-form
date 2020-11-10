@@ -10,8 +10,9 @@ node_modules/
 index.js
 index.d.ts
 
-# Coverage
-coverage/
+# Test & coverage
+.nyc_output
+coverage
 
 # Misc
 .DS_Store
