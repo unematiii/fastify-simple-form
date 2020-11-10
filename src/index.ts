@@ -3,6 +3,11 @@ import { cloneDeep, merge, omit } from 'lodash';
 import { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 
+export enum FormContentTypes {
+  FromMultipart = 'multipart/form-data',
+  FormUrlencoded = 'application/x-www-form-urlencoded',
+}
+
 export interface FormPluginOptions extends busboy.BusboyConfig {
   multipart?: boolean;
   urlencoded?: boolean;
@@ -38,14 +43,14 @@ const defaultOptions: FormPluginOptions = {
 };
 
 const getOptions = (options?: FormPluginOptions): Omit<FormPluginOptions, 'headers'> =>
-  merge({}, defaultOptions, omit(cloneDeep(options || {}), ['headers']));
+  merge({}, defaultOptions, omit(cloneDeep(options), ['headers']));
 
 export const formPlugin: FastifyPluginAsync<FormPluginOptions> = async (instance, options: FormPluginOptions) => {
   const { multipart, urlencoded, ...rest } = getOptions(options);
 
   const contentTypes = [
-    ...(multipart ? ['multipart/form-data'] : []),
-    ...(urlencoded ? ['application/x-www-form-urlencoded'] : []),
+    ...(multipart ? [FormContentTypes.FromMultipart] : []),
+    ...(urlencoded ? [FormContentTypes.FormUrlencoded] : []),
   ];
 
   if (contentTypes.length) {
