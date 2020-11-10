@@ -13,21 +13,31 @@ export interface FormPluginOptions extends busboy.BusboyConfig {
   urlencoded?: boolean;
 }
 
-export const requestParser = (options?: busboy.BusboyConfig) => (
-  req: FastifyRequest,
-): Promise<Record<string, string>> =>
+export type ParsedFormBody = Record<string, string | string[]>;
+
+const attachToBody = (body: ParsedFormBody, field: string, value: string) => {
+  if (!Object.getOwnPropertyDescriptor(Object.prototype, field)) {
+    if (body[field]) {
+      if (Array.isArray(body[field])) {
+        (body[field] as string[]).push(value);
+      } else {
+        body[field] = [body[field] as string, value];
+      }
+    } else {
+      body[field] = value;
+    }
+  }
+};
+
+export const requestParser = (options?: busboy.BusboyConfig) => (req: FastifyRequest): Promise<ParsedFormBody> =>
   new Promise((resolve, reject) => {
     try {
       const request = req.raw;
 
-      const body: Record<string, string> = {};
+      const body: ParsedFormBody = {};
       const bb = new busboy(merge({ headers: request.headers }, options));
 
-      bb.on('field', (field, value) => {
-        if (!Object.getOwnPropertyDescriptor(Object.prototype, field)) {
-          body[field] ||= value;
-        }
-      });
+      bb.on('field', (field, value) => attachToBody(body, field, value));
       bb.on('finish', () => resolve(body));
       bb.on('error', (error: unknown) => reject(error));
 

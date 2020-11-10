@@ -5,12 +5,16 @@ import http from 'http';
 import tap from 'tap';
 
 import SimpleFormPlugin, { FormContentTypes } from '../src';
-import { requestA, requestB, requestC, schema } from './fixtures';
+import { requestA, requestB, requestC, requestD, schema } from './fixtures';
 
-const getFormData = (params: Record<string, string>) => {
+const getFormData = (params: Record<string, string | string[]>) => {
   const form = new FormData();
   for (const [key, value] of Object.entries(params)) {
-    form.append(key, value);
+    if (Array.isArray(value)) {
+      value.forEach((item) => form.append(key, item));
+    } else {
+      form.append(key, value);
+    }
   }
   return form;
 };
@@ -48,6 +52,34 @@ tap.test('should parse content and attach fields to request body', (tap) => {
       tap.equals(response.statusCode, 200);
       response.resume();
       response.on('end', () => tap.pass());
+    });
+
+    form.pipe(request);
+  });
+});
+
+tap.test('should parse duplicate fields as an array', (tap) => {
+  tap.plan(3);
+
+  const instance = Fastify();
+  tap.tearDown(async () => instance.close());
+
+  instance.register(SimpleFormPlugin, {
+    urlencoded: false,
+  });
+  instance.post('/', async (request, reply) => {
+    tap.same(request.body, requestD);
+    reply.send();
+  });
+
+  const form = getFormData(requestD);
+
+  instance.listen(0, (error) => {
+    tap.error(error);
+
+    const request = http.request(getRequestOptions(instance, form));
+    request.on('response', (response) => {
+      tap.equals(response.statusCode, 200);
     });
 
     form.pipe(request);

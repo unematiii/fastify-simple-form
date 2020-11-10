@@ -16,6 +16,10 @@ export const requestC = {
   toString: '() => eval(2 + 2)',
 };
 
+export const requestD = {
+  property: ['valueA', 'valueB', 'valueC'],
+};
+
 export const schema = {
   body: {
     type: 'object',

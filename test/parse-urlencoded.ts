@@ -1,9 +1,9 @@
 import Fastify from 'fastify';
 import tap from 'tap';
-import urlencoded from 'form-urlencoded';
+import urlencoded, { FormEncodedOptions } from 'form-urlencoded';
 
 import SimpleFormPlugin, { FormContentTypes } from '../src';
-import { requestA, requestB, requestC, schema } from './fixtures';
+import { requestA, requestB, requestC, requestD, schema } from './fixtures';
 
 tap.test('should parse content and attach fields to request body', async (tap) => {
   tap.plan(2);
@@ -26,6 +26,32 @@ tap.test('should parse content and attach fields to request body', async (tap) =
       'Content-Type': FormContentTypes.FormUrlencoded,
     },
     payload: urlencoded(requestA),
+  });
+
+  tap.equal(response.statusCode, 200);
+});
+
+tap.test('should parse duplicate fields as an array', async (tap) => {
+  tap.plan(2);
+
+  const instance = Fastify();
+  tap.tearDown(async () => instance.close());
+
+  instance.register(SimpleFormPlugin, {
+    multipart: false,
+  });
+  instance.post('/', async (request, reply) => {
+    tap.same(request.body, requestD);
+    reply.send();
+  });
+
+  const response = await instance.inject({
+    path: '/',
+    method: 'POST',
+    headers: {
+      'Content-Type': FormContentTypes.FormUrlencoded,
+    },
+    payload: urlencoded(requestD, ({ skipIndex: true, skipBracket: true } as unknown) as FormEncodedOptions),
   });
 
   tap.equal(response.statusCode, 200);
