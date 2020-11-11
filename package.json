@@ -17,10 +17,12 @@
     "build": "npx tsc --project tsconfig.prod.json",
     "build:clean": "run-s clean build",
     "clean": "rimraf index.js index.d.ts",
+    "coveralls": "tap --coverage-report=text-lcov | ./node_modules/coveralls/bin/coveralls.js --verbose",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
     "prepublishOnly": "run-s build:clean",
     "test": "tap --reporter=specy",
+    "test:coveralls": "run-s test coveralls",
     "test:watch": "npm run test -- --watch"
   },
   "repository": {
@@ -48,6 +50,7 @@
     "@types/tap": "^14.10.1",
     "@typescript-eslint/eslint-plugin": "^4.6.1",
     "@typescript-eslint/parser": "^4.6.1",
+    "coveralls": "^3.1.0",
     "eslint": "^7.13.0",
     "eslint-config-prettier": "^6.15.0",
     "eslint-plugin-prettier": "^3.1.4",
