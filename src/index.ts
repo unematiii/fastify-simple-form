@@ -8,7 +8,7 @@ export enum FormContentTypes {
   FormUrlencoded = 'application/x-www-form-urlencoded',
 }
 
-export interface FormPluginOptions extends busboy.BusboyConfig {
+export interface FormPluginOptions extends Omit<busboy.BusboyConfig, 'headers'> {
   multipart?: boolean;
   urlencoded?: boolean;
 }
@@ -52,7 +52,7 @@ const defaultOptions: FormPluginOptions = {
   urlencoded: true,
 };
 
-const getOptions = (options?: FormPluginOptions): Omit<FormPluginOptions, 'headers'> =>
+const getOptions = (options?: FormPluginOptions): FormPluginOptions =>
   merge({}, defaultOptions, omit(cloneDeep(options), ['headers']));
 
 export const formPlugin: FastifyPluginAsync<FormPluginOptions> = async (instance, options: FormPluginOptions) => {

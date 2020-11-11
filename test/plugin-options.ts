@@ -91,7 +91,7 @@ tap.test('should omit plugin own options and pass rest to parser as busboy optio
       headerPairs: 20,
     },
   };
-  const pluginOptions: FormPluginOptions = {
+  const pluginOptions = {
     multipart: true,
     urlencoded: false,
     headers,

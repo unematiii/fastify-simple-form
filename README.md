@@ -39,7 +39,7 @@ This plugin has no effect when both options above are set to `false`!
 
 ### Options for busboy
 
-Accepts identical options to those of busboy [constructor](https://github.com/mscdex/busboy#busboy-methods) (with the exception of `headers`), e.g.:
+Accepts identical options to those of busboy [constructor](https://github.com/mscdex/busboy#busboy-methods) (with the exception of `headers`, which will be omitted), e.g.:
 
 ```js
 fastify.register(require('fastify-simple-form'), {
