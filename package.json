@@ -17,7 +17,7 @@
     "build": "npx tsc --project tsconfig.prod.json",
     "build:clean": "run-s clean build",
     "clean": "rimraf index.js index.d.ts",
-    "coveralls": "tap --coverage-report=text-lcov | ./node_modules/coveralls/bin/coveralls.js --verbose",
+    "coveralls": "tap --coverage-report=text-lcov | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
     "prepublishOnly": "run-s build:clean",
