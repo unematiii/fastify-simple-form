@@ -13,6 +13,7 @@ export const requestB = {
 
 export const requestC = {
   property: 'value',
+  constructor: '() => ({})',
   toString: '() => eval(2 + 2)',
 };
 

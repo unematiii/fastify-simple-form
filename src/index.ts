@@ -1,43 +1,109 @@
 import busboy from 'busboy';
-import { cloneDeep, merge, omit } from 'lodash';
-import { FastifyPluginAsync, FastifyRequest } from 'fastify';
+import { cloneDeep, pick } from 'lodash';
+import { FastifyInstance, FastifyPluginAsync, FastifyRequest, FastifyServerOptions } from 'fastify';
 import fp from 'fastify-plugin';
 
-export enum FormContentTypes {
+/**
+ * Export types
+ */
+
+export enum FormPluginContentTypes {
   FromMultipart = 'multipart/form-data',
   FormUrlencoded = 'application/x-www-form-urlencoded',
 }
 
-export interface FormPluginOptions extends Omit<busboy.BusboyConfig, 'headers'> {
+export interface FormPluginContentParserOptions {
+  onConstructorPoisoning?: FastifyServerOptions['onConstructorPoisoning'];
+  onProtoPoisoning?: FastifyServerOptions['onProtoPoisoning'];
+  busboyOptions?: Omit<busboy.BusboyConfig, 'headers'>;
+}
+
+export interface FormPluginOptions extends FormPluginContentParserOptions {
   multipart?: boolean;
   urlencoded?: boolean;
 }
 
 export type ParsedFormBody = Record<string, string | string[]>;
 
-const attachToBody = (body: ParsedFormBody, field: string, value: string) => {
-  if (!Object.getOwnPropertyDescriptor(Object.prototype, field)) {
-    if (body[field]) {
-      if (Array.isArray(body[field])) {
-        (body[field] as string[]).push(value);
-      } else {
-        body[field] = [body[field] as string, value];
-      }
-    } else {
-      body[field] = value;
-    }
+/**
+ * Utils
+ */
+
+// Attaches field to body while doing some proto poisoning checks
+const attachToBodySafe = (
+  options: Omit<FormPluginContentParserOptions, 'busboyOptions'>,
+  body: ParsedFormBody,
+  field: string,
+  value: string,
+) => {
+  const action = Object.getOwnPropertyDescriptor(Object.prototype, field)
+    ? field === 'constructor'
+      ? options.onConstructorPoisoning
+      : options.onProtoPoisoning
+    : 'ignore';
+
+  switch (action) {
+    case 'ignore':
+      return attachToBody(body, field, value);
+    case 'error':
+      throw new SyntaxError('Object contains forbidden prototype property');
+    case 'remove':
+      return;
   }
 };
 
-export const requestParser = (options?: busboy.BusboyConfig) => (req: FastifyRequest): Promise<ParsedFormBody> =>
+// Assigns property to an object, multiple occurrences of a property will get merged into an array
+const attachToBody = (body: ParsedFormBody, field: string, value: string) => {
+  if (body[field]) {
+    if (Array.isArray(body[field])) {
+      (body[field] as string[]).push(value);
+    } else {
+      body[field] = [body[field] as string, value];
+    }
+  } else {
+    body[field] = value;
+  }
+};
+
+// Merges options with default options
+const defaultOptions: FormPluginOptions = {
+  multipart: true,
+  urlencoded: true,
+};
+
+const getPluginOptions = (
+  instance: FastifyInstance,
+  { busboyOptions, ...pluginOptions }: FormPluginOptions,
+): FormPluginOptions =>
+  Object.assign(
+    {},
+    pick(instance.initialConfig, ['onConstructorPoisoning', 'onProtoPoisoning']),
+    defaultOptions,
+    pluginOptions,
+    { busboyOptions: cloneDeep(busboyOptions || {}) },
+  );
+
+/**
+ * Parser factory
+ */
+export const requestParserFactory = ({
+  busboyOptions,
+  ...parserOptions
+}: FormPluginContentParserOptions) => (req: FastifyRequest): Promise<ParsedFormBody> =>
   new Promise((resolve, reject) => {
     try {
       const request = req.raw;
 
       const body: ParsedFormBody = {};
-      const bb = new busboy(merge({ headers: request.headers }, options));
+      const bb = new busboy(Object.assign({ headers: request.headers }, busboyOptions));
 
-      bb.on('field', (field, value) => attachToBody(body, field, value));
+      bb.on('field', (field, value) => {
+        try {
+          attachToBodySafe(parserOptions, body, field, value);
+        } catch (error) {
+          reject(error);
+        }
+      });
       bb.on('finish', () => resolve(body));
       bb.on('error', (error: unknown) => reject(error));
 
@@ -47,24 +113,24 @@ export const requestParser = (options?: busboy.BusboyConfig) => (req: FastifyReq
     }
   });
 
-const defaultOptions: FormPluginOptions = {
-  multipart: true,
-  urlencoded: true,
-};
-
-const getOptions = (options?: FormPluginOptions): FormPluginOptions =>
-  merge({}, defaultOptions, omit(cloneDeep(options), ['headers']));
-
-export const formPlugin: FastifyPluginAsync<FormPluginOptions> = async (instance, options: FormPluginOptions) => {
-  const { multipart, urlencoded, ...rest } = getOptions(options);
+/**
+ * Plugin
+ * @param instance Fastify instance
+ * @param options Plugin options
+ */
+export const formPlugin: FastifyPluginAsync<FormPluginOptions> = async (
+  instance,
+  options: FormPluginOptions,
+) => {
+  const { multipart, urlencoded, ...parserOptions } = getPluginOptions(instance, options);
 
   const contentTypes = [
-    ...(multipart ? [FormContentTypes.FromMultipart] : []),
-    ...(urlencoded ? [FormContentTypes.FormUrlencoded] : []),
+    ...(multipart ? [FormPluginContentTypes.FromMultipart] : []),
+    ...(urlencoded ? [FormPluginContentTypes.FormUrlencoded] : []),
   ];
 
   if (contentTypes.length) {
-    instance.addContentTypeParser(contentTypes, requestParser(rest));
+    instance.addContentTypeParser(contentTypes, requestParserFactory(parserOptions));
   }
 };
 

@@ -18,8 +18,8 @@ require.cache[require.resolve('busboy')] = ({
   exports: FakeBusboy,
 } as unknown) as NodeModule;
 
-import SimpleFormPlugin, { FormContentTypes } from '../src';
 import { requestA } from './fixtures';
+import SimpleFormPlugin, { FormPluginContentTypes } from '../src';
 
 tap.test('should trigger error handler when busboy stream emits error event', async (tap) => {
   tap.plan(2);
@@ -44,7 +44,7 @@ tap.test('should trigger error handler when busboy stream emits error event', as
     path: '/',
     method: 'POST',
     headers: {
-      'Content-Type': FormContentTypes.FormUrlencoded,
+      'Content-Type': FormPluginContentTypes.FormUrlencoded,
     },
     payload: urlencoded(requestA),
   });

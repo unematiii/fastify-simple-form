@@ -1,11 +1,15 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import sinon from 'sinon';
 import tap from 'tap';
 
 import * as FastifySimpleForm from '../src';
 import type { FormPluginOptions } from '../src';
 
-const { default: SimpleFormPlugin, FormContentTypes } = FastifySimpleForm;
+const { default: SimpleFormPlugin, FormPluginContentTypes: FormContentTypes } = FastifySimpleForm;
+
+const getInstanceProtoPoisoningOptions = ({
+  initialConfig: { onConstructorPoisoning, onProtoPoisoning },
+}: FastifyInstance) => ({ onConstructorPoisoning, onProtoPoisoning });
 
 tap.test('should enable plugin with default options', async (tap) => {
   const instance = Fastify();
@@ -31,18 +35,21 @@ tap.test('should enable content type parser for `multipart/form-data` only', asy
   tap.false(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
 });
 
-tap.test('should enable content type parser for `application/x-www-form-urlencoded` only', async (tap) => {
-  const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+tap.test(
+  'should enable content type parser for `application/x-www-form-urlencoded` only',
+  async (tap) => {
+    const instance = Fastify();
+    tap.tearDown(async () => instance.close());
 
-  instance.register(SimpleFormPlugin, {
-    multipart: false,
-  });
-  await instance.ready();
+    instance.register(SimpleFormPlugin, {
+      multipart: false,
+    });
+    await instance.ready();
 
-  tap.false(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
-  tap.true(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
-});
+    tap.false(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
+    tap.true(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
+  },
+);
 
 tap.test('should not register any content type parsers', async (tap) => {
   const instance = Fastify();
@@ -58,48 +65,57 @@ tap.test('should not register any content type parsers', async (tap) => {
   tap.false(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
 });
 
-tap.test('should omit plugin own options and pass empty options to parser', async (tap) => {
-  const instance = Fastify();
-  tap.tearDown(async () => {
-    instance.close();
-    sinon.restore();
-  });
+tap.test(
+  'should omit content type related options and pass rest to parser factory',
+  async (tap) => {
+    const instance = Fastify();
+    tap.tearDown(async () => {
+      instance.close();
+      sinon.restore();
+    });
 
-  const requestParserSpy = sinon.spy(FastifySimpleForm, 'requestParser');
+    const requestParserFactorySpy = sinon.spy(FastifySimpleForm, 'requestParserFactory');
 
-  instance.register(SimpleFormPlugin);
-  await instance.ready();
+    instance.register(SimpleFormPlugin);
+    await instance.ready();
 
-  tap.true(requestParserSpy.calledWithExactly({}));
-});
+    tap.true(
+      requestParserFactorySpy.calledWithExactly({
+        busboyOptions: {},
+        ...getInstanceProtoPoisoningOptions(instance),
+      }),
+    );
+  },
+);
 
-tap.test('should omit plugin own options and pass rest to parser as busboy options, `headers` omitted', async (tap) => {
-  const instance = Fastify();
-  tap.tearDown(async () => {
-    instance.close();
-    sinon.restore();
-  });
+tap.test(
+  'should prefer passed in proto poisoning options over those defined on instance level',
+  async (tap) => {
+    const instance = Fastify({
+      onConstructorPoisoning: 'error',
+      onProtoPoisoning: 'error',
+    });
 
-  const requestParserSpy = sinon.spy(FastifySimpleForm, 'requestParser');
-  const headers = {
-    Connection: 'keep-alive',
-  };
-  const busboyOptions: FormPluginOptions = {
-    defCharset: 'utf-8',
-    limits: {
-      fields: 10,
-      headerPairs: 20,
-    },
-  };
-  const pluginOptions = {
-    multipart: true,
-    urlencoded: false,
-    headers,
-    ...busboyOptions,
-  };
+    tap.tearDown(async () => {
+      instance.close();
+      sinon.restore();
+    });
 
-  instance.register(SimpleFormPlugin, pluginOptions);
-  await instance.ready();
+    const requestParserFactorySpy = sinon.spy(FastifySimpleForm, 'requestParserFactory');
 
-  tap.true(requestParserSpy.calledWithExactly(busboyOptions));
-});
+    const pluginOptions: FormPluginOptions = {
+      onConstructorPoisoning: 'remove',
+      onProtoPoisoning: 'remove',
+    };
+
+    instance.register(SimpleFormPlugin, pluginOptions);
+    await instance.ready();
+
+    tap.true(
+      requestParserFactorySpy.calledWithExactly({
+        busboyOptions: {},
+        ...pluginOptions,
+      }),
+    );
+  },
+);

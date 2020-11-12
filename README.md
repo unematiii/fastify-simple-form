@@ -38,22 +38,45 @@ fastify.register(require('fastify-simple-form'), {
 });
 ```
 
-This plugin has no effect when both options above are set to `false`!
+This plugin has no effect when both options above are set to `false`.
 
 ### Options for busboy
 
-Accepts identical options to those of busboy [constructor](https://github.com/mscdex/busboy#busboy-methods) (with the exception of `headers`, which will be omitted), e.g.:
+Options for busboy can be passed in using `busboyOptions` property which has identical shape to busboy [constructor](https://github.com/mscdex/busboy#busboy-methods), e.g.:
 
 ```js
 fastify.register(require('fastify-simple-form'), {
-  defCharset: 'utf8',
-  limits: {
-    fieldNameSize: 100, // Max field name size (in bytes), default: 100
-    fieldSize: 1000000, // Max field value size (in bytes), default: 1MB
-    fields: 10,         // Max number of non-file fields, default: Infinity
+  busboyOptions: {
+    defCharset: 'utf8',
+    limits: {
+      fieldNameSize: 100, // Max field name size (in bytes), default: 100
+      fieldSize: 1000000, // Max field value size (in bytes), default: 1MB
+      fields: 10,         // Max number of non-file fields, default: Infinity
+      // ...
+    },
   },
 });
 ```
+
+### Prototype poisoning protection
+
+```js
+fastify.register(require('fastify-simple-form'), {
+  onConstructorPoisoning: 'ignore', // Possible values are 'error', 'remove' and 'ignore'
+  onProtoPoisoning: 'error'         // Possible values are 'error', 'remove' and 'ignore'
+});
+```
+
+- `onConstructorPoisoning`:
+  - `error` - throws SyntaxError when a `constructor` key is found
+  - `remove` - field will not be attached to `request.body`
+  - `ignore` - field be be attached to `request.body`
+- `onProtoPoisoning`:
+  - `error` - throw SyntaxError when a key matching any property name of `Object.prototype` (besides `constructor`) is found
+  - `remove` - field will not be attached to `request.body`
+  - `ignore` - field be be attached to `request.body`
+
+Both options will default to what is defined on Fastify root instance (or Fastify own defaults) for safe parsing of JSON objects. See [`onConstructorPoisoning`](https://www.fastify.io/docs/latest/Server/#onprotopoisoning) and [`onProtoPoisoning`](https://www.fastify.io/docs/latest/Server/#onprotopoisoning).
 
 ### Example
 
@@ -80,20 +103,9 @@ fastify.post(
           password: {
             type: 'string',
           },
-          client_id: {
-            type: 'string',
-            format: 'uuid',
-          },
-          client_secret: {
-            type: 'string',
-          },
-          refresh_token: {
-            type: 'string',
-            format: 'uuid',
-          },
           grant_type: {
             type: 'string',
-            enum: ['authorization_code', 'refresh_token'],
+            enum: ['password'],
           },
         },
         required: ['grant_type'],
@@ -111,20 +123,12 @@ fastify.listen(3000);
 These requests would succeed:
 
 ```sh
-curl \
-  -F "client_id=e52b2864-7611-4f26-94e4-d13f7039f25d" \
-  -F "client_secret=rGGb45-awp0Q9X2yP3CxwhP8HhUY8uW1" \
-  -F "refresh_token=f5e6ca6e-e2cf-4130-9b3f-26727ca11f78" \
-  -F "grant_type=refresh_token" \
+curl -F "username=jon" -F "password=snow" -F "grant_type=password" \
   localhost:3000/token
 ```
 
 ```sh
-curl \
-  -d "client_id=e52b2864-7611-4f26-94e4-d13f7039f25d" \
-  -d "client_secret=rGGb45-awp0Q9X2yP3CxwhP8HhUY8uW1" \
-  -d "refresh_token=f5e6ca6e-e2cf-4130-9b3f-26727ca11f78" \
-  -d "grant_type=refresh_token" \
+curl -d "username=jon" -d "password=snow" -d "grant_type=password" \
   localhost:3000/token
 ```
 
@@ -132,28 +136,21 @@ Response:
 
 ```json
 {
-  "client_id": "e52b2864-7611-4f26-94e4-d13f7039f25d",
-  "client_secret": "rGGb45-awp0Q9X2yP3CxwhP8HhUY8uW1",
-  "refresh_token": "f5e6ca6e-e2cf-4130-9b3f-26727ca11f78",
-  "grant_type": "refresh_token"
+  "username": "jon",
+  "password": "snow",
+  "grant_type": "password"
 }
 ```
 
 While these won't pass the schema validation
 
 ```sh
-curl \
-  -F "username=jon" \
-  -F "password=snow" \
-  -F "grant_type=password" \
+curl -F "username=jon" -F "password=snow" -F "grant_type=refresh_token" \
   localhost:3000/token
 ```
 
 ```sh
-curl \
-  -d "username=jon" \
-  -d "password=snow" \
-  -d "grant_type=password" \
+curl -d "username=jon" -d "password=snow" -d "grant_type=refresh_token" \
   localhost:3000/token
 ```
 
