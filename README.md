@@ -2,6 +2,9 @@
 
 [![Build Status](https://travis-ci.org/unematiii/fastify-simple-form.svg)](https://travis-ci.org/unematiii/fastify-simple-form)
 [![Coverage Status](https://coveralls.io/repos/github/unematiii/fastify-simple-form/badge.svg)](https://coveralls.io/github/unematiii/fastify-simple-form)
+[![View on npm](https://img.shields.io/npm/v/fastify-simple-form)](https://www.npmjs.com/package/fastify-simple-form)
+[![View on npm](https://img.shields.io/npm/dw/fastify-simple-form)](https://www.npmjs.com/package/fastify-simple-form)
+[![GitHub license](https://img.shields.io/github/license/unematiii/fastify-simple-form)](https://github.com/unematiii/fastify-simple-form/blob/main/LICENSE)
 
 Fastify plugin that adds content type parser for the `application/x-www-form-urlencoded` and/or `multipart/form-data` types.
 
