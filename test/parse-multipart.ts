@@ -32,7 +32,7 @@ tap.test('should parse content and attach fields to request body', (tap) => {
   tap.plan(4);
 
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     urlencoded: false,
@@ -44,12 +44,12 @@ tap.test('should parse content and attach fields to request body', (tap) => {
 
   const form = getFormData(requestA);
 
-  instance.listen(0, (error) => {
+  instance.listen({ port: 0 }, (error) => {
     tap.error(error);
 
     const request = http.request(getRequestOptions(instance, form));
     request.on('response', (response) => {
-      tap.equals(response.statusCode, 200);
+      tap.equal(response.statusCode, 200);
       response.resume();
       response.on('end', () => tap.pass());
     });
@@ -62,7 +62,7 @@ tap.test('should parse duplicate fields as an array', (tap) => {
   tap.plan(3);
 
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     urlencoded: false,
@@ -74,12 +74,12 @@ tap.test('should parse duplicate fields as an array', (tap) => {
 
   const form = getFormData(requestD);
 
-  instance.listen(0, (error) => {
+  instance.listen({ port: 0 }, (error) => {
     tap.error(error);
 
     const request = http.request(getRequestOptions(instance, form));
     request.on('response', (response) => {
-      tap.equals(response.statusCode, 200);
+      tap.equal(response.statusCode, 200);
     });
 
     form.pipe(request);
@@ -92,7 +92,7 @@ tap.test(
     tap.plan(7);
 
     const instance = Fastify();
-    tap.tearDown(async () => instance.close());
+    tap.teardown(async () => instance.close());
 
     instance.register(SimpleFormPlugin, {
       urlencoded: false,
@@ -101,13 +101,13 @@ tap.test(
       schema,
       errorHandler: (error, request, reply) => {
         tap.same(request.body, requestB);
-        tap.true(error.validation);
-        tap.assert(error.validation?.length == 1);
+        tap.ok(error.validation);
+        tap.ok(error.validation?.length == 1);
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { dataPath, message } = error.validation![0];
-        tap.equals(dataPath, '.grant_type');
-        tap.equals(message, 'should be equal to one of the allowed values');
+        const { instancePath, message } = error.validation![0];
+        tap.equal(instancePath, '/grant_type');
+        tap.equal(message, 'must be equal to one of the allowed values');
 
         reply.send(error);
       },
@@ -118,12 +118,12 @@ tap.test(
 
     const form = getFormData(requestB);
 
-    instance.listen(0, (error) => {
+    instance.listen({ port: 0 }, (error) => {
       tap.error(error);
 
       const request = http.request(getRequestOptions(instance, form));
       request.on('response', (response) => {
-        tap.equals(response.statusCode, 400);
+        tap.equal(response.statusCode, 400);
       });
 
       form.pipe(request);
@@ -135,7 +135,7 @@ tap.test('should not attach keys of prototype properties to request body', (tap)
   tap.plan(3);
 
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     urlencoded: false,
@@ -152,12 +152,12 @@ tap.test('should not attach keys of prototype properties to request body', (tap)
 
   const form = getFormData(requestC);
 
-  instance.listen(0, (error) => {
+  instance.listen({ port: 0 }, (error) => {
     tap.error(error);
 
     const request = http.request(getRequestOptions(instance, form));
     request.on('response', (response) => {
-      tap.equals(response.statusCode, 200);
+      tap.equal(response.statusCode, 200);
     });
 
     form.pipe(request);
@@ -170,7 +170,7 @@ tap.test(
     tap.plan(3);
 
     const instance = Fastify();
-    tap.tearDown(async () => instance.close());
+    tap.teardown(async () => instance.close());
 
     instance.register(SimpleFormPlugin, {
       urlencoded: false,
@@ -189,12 +189,12 @@ tap.test(
 
     const form = getFormData(requestC);
 
-    instance.listen(0, (error) => {
+    instance.listen({ port: 0 }, (error) => {
       tap.error(error);
 
       const request = http.request(getRequestOptions(instance, form));
       request.on('response', (response) => {
-        tap.equals(response.statusCode, 500);
+        tap.equal(response.statusCode, 500);
       });
 
       form.pipe(request);
@@ -208,7 +208,7 @@ tap.test(
     tap.plan(3);
 
     const instance = Fastify();
-    tap.tearDown(async () => instance.close());
+    tap.teardown(async () => instance.close());
 
     instance.register(SimpleFormPlugin, {
       urlencoded: false,
@@ -227,12 +227,12 @@ tap.test(
 
     const form = getFormData(requestC);
 
-    instance.listen(0, (error) => {
+    instance.listen({ port: 0 }, (error) => {
       tap.error(error);
 
       const request = http.request(getRequestOptions(instance, form));
       request.on('response', (response) => {
-        tap.equals(response.statusCode, 500);
+        tap.equal(response.statusCode, 500);
       });
 
       form.pipe(request);
@@ -244,7 +244,7 @@ tap.test('should trigger an error on busboy instance', (tap) => {
   tap.plan(3);
 
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     urlencoded: false,
@@ -261,7 +261,7 @@ tap.test('should trigger an error on busboy instance', (tap) => {
 
   const form = new FormData();
 
-  instance.listen(0, (error) => {
+  instance.listen({ port: 0 }, (error) => {
     tap.error(error);
 
     const request = http.request({
@@ -271,7 +271,7 @@ tap.test('should trigger an error on busboy instance', (tap) => {
       },
     });
     request.on('response', (response) => {
-      tap.equals(response.statusCode, 500);
+      tap.equal(response.statusCode, 500);
     });
 
     form.pipe(request);

@@ -14,9 +14,9 @@ class FakeBusboy extends Writable {
   }
 }
 
-require.cache[require.resolve('busboy')] = ({
-  exports: FakeBusboy,
-} as unknown) as NodeModule;
+require.cache[require.resolve('busboy')] = {
+  exports: () => new FakeBusboy(),
+} as unknown as NodeModule;
 
 import { requestA } from './fixtures';
 import SimpleFormPlugin, { FormPluginContentTypes } from '../src';
@@ -25,14 +25,14 @@ tap.test('should trigger error handler when busboy stream emits error event', as
   tap.plan(2);
 
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     multipart: false,
   });
   instance.post('/', {
     errorHandler: (error, _, reply) => {
-      tap.equals(error.message, streamErrorMessage);
+      tap.equal(error.message, streamErrorMessage);
       reply.send(error);
     },
     handler: (_, reply) => {

@@ -86,32 +86,31 @@ const getPluginOptions = (
 /**
  * Parser factory
  */
-export const requestParserFactory = ({
-  busboyOptions,
-  ...parserOptions
-}: FormPluginContentParserOptions) => (req: FastifyRequest): Promise<ParsedFormBody> =>
-  new Promise((resolve, reject) => {
-    try {
-      const request = req.raw;
+export const requestParserFactory =
+  ({ busboyOptions, ...parserOptions }: FormPluginContentParserOptions) =>
+  (req: FastifyRequest): Promise<ParsedFormBody> =>
+    new Promise((resolve, reject) => {
+      try {
+        const request = req.raw;
 
-      const body: ParsedFormBody = {};
-      const bb = new busboy(Object.assign({ headers: request.headers }, busboyOptions));
+        const body: ParsedFormBody = {};
+        const bb = busboy(Object.assign({ headers: request.headers }, busboyOptions));
 
-      bb.on('field', (field, value) => {
-        try {
-          attachToBodySafe(parserOptions, body, field, value);
-        } catch (error) {
-          reject(error);
-        }
-      });
-      bb.on('finish', () => resolve(body));
-      bb.on('error', (error: unknown) => reject(error));
+        bb.on('field', (field, value) => {
+          try {
+            attachToBodySafe(parserOptions, body, field, value);
+          } catch (error) {
+            reject(error);
+          }
+        });
+        bb.on('finish', () => resolve(body));
+        bb.on('error', (error: unknown) => reject(error));
 
-      request.pipe(bb);
-    } catch (error) {
-      reject(error);
-    }
-  });
+        request.pipe(bb);
+      } catch (error) {
+        reject(error);
+      }
+    });
 
 /**
  * Plugin
@@ -135,5 +134,5 @@ export const formPlugin: FastifyPluginAsync<FormPluginOptions> = async (
 };
 
 export default fp(formPlugin, {
-  fastify: '3.x',
+  fastify: '>=4.x',
 });

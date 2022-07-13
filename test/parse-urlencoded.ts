@@ -9,7 +9,7 @@ tap.test('should parse content and attach fields to request body', async (tap) =
   tap.plan(2);
 
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     multipart: false,
@@ -35,7 +35,7 @@ tap.test('should parse duplicate fields as an array', async (tap) => {
   tap.plan(2);
 
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     multipart: false,
@@ -51,10 +51,10 @@ tap.test('should parse duplicate fields as an array', async (tap) => {
     headers: {
       'Content-Type': FormPluginContentTypes.FormUrlencoded,
     },
-    payload: urlencoded(requestD, ({
+    payload: urlencoded(requestD, {
       skipIndex: true,
       skipBracket: true,
-    } as unknown) as FormEncodedOptions),
+    } as unknown as FormEncodedOptions),
   });
 
   tap.equal(response.statusCode, 200);
@@ -66,7 +66,7 @@ tap.test(
     tap.plan(6);
 
     const instance = Fastify();
-    tap.tearDown(async () => instance.close());
+    tap.teardown(async () => instance.close());
 
     instance.register(SimpleFormPlugin, {
       multipart: false,
@@ -75,13 +75,13 @@ tap.test(
       schema,
       errorHandler: (error, request, reply) => {
         tap.same(request.body, requestB);
-        tap.true(error.validation);
-        tap.assert(error.validation?.length == 1);
+        tap.ok(error.validation);
+        tap.ok(error.validation?.length == 1);
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { dataPath, message } = error.validation![0];
-        tap.equals(dataPath, '.grant_type');
-        tap.equals(message, 'should be equal to one of the allowed values');
+        const { instancePath, message } = error.validation![0];
+        tap.equal(instancePath, '/grant_type');
+        tap.equal(message, 'must be equal to one of the allowed values');
 
         reply.send(error);
       },
@@ -107,7 +107,7 @@ tap.test('should not attach keys of prototype properties to request body', async
   tap.plan(2);
 
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     multipart: false,
@@ -140,7 +140,7 @@ tap.test(
     tap.plan(2);
 
     const instance = Fastify();
-    tap.tearDown(async () => instance.close());
+    tap.teardown(async () => instance.close());
 
     instance.register(SimpleFormPlugin, {
       multipart: false,
@@ -177,7 +177,7 @@ tap.test(
     tap.plan(2);
 
     const instance = Fastify();
-    tap.tearDown(async () => instance.close());
+    tap.teardown(async () => instance.close());
 
     instance.register(SimpleFormPlugin, {
       multipart: false,

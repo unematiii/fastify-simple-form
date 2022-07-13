@@ -13,47 +13,47 @@ const getInstanceProtoPoisoningOptions = ({
 
 tap.test('should enable plugin with default options', async (tap) => {
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin);
   await instance.ready();
 
-  tap.true(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
-  tap.true(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
+  tap.ok(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
+  tap.ok(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
 });
 
 tap.test('should enable content type parser for `multipart/form-data` only', async (tap) => {
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     urlencoded: false,
   });
   await instance.ready();
 
-  tap.true(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
-  tap.false(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
+  tap.ok(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
+  tap.notOk(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
 });
 
 tap.test(
   'should enable content type parser for `application/x-www-form-urlencoded` only',
   async (tap) => {
     const instance = Fastify();
-    tap.tearDown(async () => instance.close());
+    tap.teardown(async () => instance.close());
 
     instance.register(SimpleFormPlugin, {
       multipart: false,
     });
     await instance.ready();
 
-    tap.false(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
-    tap.true(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
+    tap.notOk(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
+    tap.ok(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
   },
 );
 
 tap.test('should not register any content type parsers', async (tap) => {
   const instance = Fastify();
-  tap.tearDown(async () => instance.close());
+  tap.teardown(async () => instance.close());
 
   instance.register(SimpleFormPlugin, {
     multipart: false,
@@ -61,15 +61,15 @@ tap.test('should not register any content type parsers', async (tap) => {
   });
   await instance.ready();
 
-  tap.false(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
-  tap.false(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
+  tap.notOk(instance.hasContentTypeParser(FormContentTypes.FromMultipart));
+  tap.notOk(instance.hasContentTypeParser(FormContentTypes.FormUrlencoded));
 });
 
 tap.test(
   'should omit content type related options and pass rest to parser factory',
   async (tap) => {
     const instance = Fastify();
-    tap.tearDown(async () => {
+    tap.teardown(async () => {
       instance.close();
       sinon.restore();
     });
@@ -79,7 +79,7 @@ tap.test(
     instance.register(SimpleFormPlugin);
     await instance.ready();
 
-    tap.true(
+    tap.ok(
       requestParserFactorySpy.calledWithExactly({
         busboyOptions: {},
         ...getInstanceProtoPoisoningOptions(instance),
@@ -96,7 +96,7 @@ tap.test(
       onProtoPoisoning: 'error',
     });
 
-    tap.tearDown(async () => {
+    tap.teardown(async () => {
       instance.close();
       sinon.restore();
     });
@@ -111,7 +111,7 @@ tap.test(
     instance.register(SimpleFormPlugin, pluginOptions);
     await instance.ready();
 
-    tap.true(
+    tap.ok(
       requestParserFactorySpy.calledWithExactly({
         busboyOptions: {},
         ...pluginOptions,
