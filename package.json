@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/unematiii/fastify-simple-form.git"
+    "url": "git+https://github.com/unematiii/fastify-simple-form.git"
   },
   "keywords": [
     "fastify",
