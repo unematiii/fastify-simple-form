@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/unematiii/fastify-simple-form/actions/workflows/ci.yml/badge.svg)](https://github.com/unematiii/fastify-simple-form/actions/workflows/ci.yml)
 [![View on npm](https://img.shields.io/npm/v/fastify-simple-form)](https://www.npmjs.com/package/fastify-simple-form)
-[![View on npm](https://img.shields.io/npm/dw/fastify-simple-form)](https://www.npmjs.com/package/fastify-simple-form)
+[![Weekly npm downloads](https://badgen.net/npm/dw/fastify-simple-form)](https://www.npmjs.com/package/fastify-simple-form)
 [![GitHub license](https://img.shields.io/github/license/unematiii/fastify-simple-form)](https://github.com/unematiii/fastify-simple-form/blob/main/LICENSE)
 
 Fastify plugin that adds content type parser for the `application/x-www-form-urlencoded` and/or `multipart/form-data` types.
