@@ -1,5 +1,4 @@
 import busboy from 'busboy';
-import { cloneDeep, pick } from 'lodash';
 import { FastifyInstance, FastifyPluginAsync, FastifyRequest, FastifyServerOptions } from 'fastify';
 import fp from 'fastify-plugin';
 
@@ -54,15 +53,13 @@ const attachToBodySafe = (
 
 // Assigns property to an object, multiple occurrences of a property will get merged into an array
 const attachToBody = (body: ParsedFormBody, field: string, value: string) => {
-  if (body[field]) {
-    if (Array.isArray(body[field])) {
-      (body[field] as string[]).push(value);
-    } else {
-      body[field] = [body[field] as string, value];
-    }
-  } else {
-    body[field] = value;
-  }
+  const previous = Object.prototype.hasOwnProperty.call(body, field) ? body[field] : undefined;
+  Object.defineProperty(body, field, {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: previous === undefined ? value : Array.isArray(previous) ? [...previous, value] : [previous, value],
+  });
 };
 
 // Merges options with default options
@@ -74,14 +71,13 @@ const defaultOptions: FormPluginOptions = {
 const getPluginOptions = (
   instance: FastifyInstance,
   { busboyOptions, ...pluginOptions }: FormPluginOptions,
-): FormPluginOptions =>
-  Object.assign(
-    {},
-    pick(instance.initialConfig, ['onConstructorPoisoning', 'onProtoPoisoning']),
-    defaultOptions,
-    pluginOptions,
-    { busboyOptions: cloneDeep(busboyOptions || {}) },
-  );
+): FormPluginOptions => ({
+  onConstructorPoisoning: instance.initialConfig.onConstructorPoisoning,
+  onProtoPoisoning: instance.initialConfig.onProtoPoisoning,
+  ...defaultOptions,
+  ...pluginOptions,
+  busboyOptions: busboyOptions ? { ...busboyOptions, limits: busboyOptions.limits && { ...busboyOptions.limits } } : {},
+});
 
 /**
  * Parser factory
@@ -134,5 +130,6 @@ export const formPlugin: FastifyPluginAsync<FormPluginOptions> = async (
 };
 
 export default fp(formPlugin, {
-  fastify: '>=4.x',
+  fastify: '>=4',
+  name: 'fastify-simple-form',
 });

@@ -1,7 +1,6 @@
 # fastify-simple-form
 
-[![Build Status](https://travis-ci.org/unematiii/fastify-simple-form.svg)](https://travis-ci.org/unematiii/fastify-simple-form)
-[![Coverage Status](https://coveralls.io/repos/github/unematiii/fastify-simple-form/badge.svg)](https://coveralls.io/github/unematiii/fastify-simple-form)
+[![CI](https://github.com/unematiii/fastify-simple-form/actions/workflows/ci.yml/badge.svg)](https://github.com/unematiii/fastify-simple-form/actions/workflows/ci.yml)
 [![View on npm](https://img.shields.io/npm/v/fastify-simple-form)](https://www.npmjs.com/package/fastify-simple-form)
 [![View on npm](https://img.shields.io/npm/dw/fastify-simple-form)](https://www.npmjs.com/package/fastify-simple-form)
 [![GitHub license](https://img.shields.io/github/license/unematiii/fastify-simple-form)](https://github.com/unematiii/fastify-simple-form/blob/main/LICENSE)
@@ -12,7 +11,11 @@ Fastify plugin that adds content type parser for the `application/x-www-form-url
 
 Essentially a tiny wrapper around [busboy](https://github.com/mscdex/busboy), that parses `application/x-www-form-urlencoded` and/or `multipart/form-data` content types and attaches associated fields to `request.body`.
 
-NB! This plugin does not handle `files`, these get simply discarded as described [here](https://github.com/mscdex/busboy#busboy-special-events).
+This plugin discards file parts and returns only text fields. Repeated field names become arrays of strings. For file uploads, use a dedicated multipart plugin such as [`@fastify/multipart`](https://github.com/fastify/fastify-multipart).
+
+## Compatibility
+
+Fastify 4 and 5 are tested. Node.js 18 or newer is required by this package; Fastify 5 itself requires Node.js 20 or newer. Newer Fastify releases are allowed to load the plugin, but are not yet covered by CI.
 
 ## Install
 
@@ -22,10 +25,7 @@ npm install fastify-simple-form
 
 ## TypeScript
 
-Although this package includes typings for the plugin itself, you must install ones for node.js and busboy manually:
-```
-npm install @types/node @types/busboy --save-dev
-```
+Type declarations, including the Busboy option types, are included with the package. Install `@types/node` in your project if your TypeScript setup needs Node.js types.
 
 ## Usage & Options
 
@@ -70,13 +70,13 @@ fastify.register(require('fastify-simple-form'), {
 - `onConstructorPoisoning`:
   - `error` - throws SyntaxError when a `constructor` key is found
   - `remove` - field will not be attached to `request.body`
-  - `ignore` - field be be attached to `request.body`
+  - `ignore` - field will be attached to `request.body`
 - `onProtoPoisoning`:
   - `error` - throw SyntaxError when a key matching any property name of `Object.prototype` (besides `constructor`) is found
   - `remove` - field will not be attached to `request.body`
   - `ignore` - field be be attached to `request.body`
 
-Both options will default to what is defined on Fastify root instance (or Fastify own defaults) for safe parsing of JSON objects. See [`onConstructorPoisoning`](https://www.fastify.io/docs/latest/Server/#onprotopoisoning) and [`onProtoPoisoning`](https://www.fastify.io/docs/latest/Server/#onprotopoisoning).
+Both options default to the values on the Fastify instance. See [Fastify's server options](https://fastify.dev/docs/latest/Reference/Server/#onprotopoisoning).
 
 ### Example
 
@@ -117,7 +117,7 @@ fastify.post(
   },
 );
 
-fastify.listen(3000);
+fastify.listen({ port: 3000 });
 ```
 
 These requests would succeed:
@@ -160,6 +160,6 @@ Response
 {
   "statusCode": 400,
   "error": "Bad Request",
-  "message": "body.grant_type should be equal to one of the allowed values"
+  "message": "body/grant_type must be equal to one of the allowed values"
 }
 ```

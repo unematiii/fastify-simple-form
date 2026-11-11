@@ -1,3 +1,0 @@
-test-ignore: ^.*fixtures.*$
-test-regex: ((\/|^)(tests?|__tests?__)\/.*|\.(tests?|spec)|^\/?tests?)\.([mc]js|[jt]sx?)$
-ts: true
