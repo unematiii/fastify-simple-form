@@ -42,6 +42,17 @@ for (const type of ['application/x-www-form-urlencoded', 'multipart/form-data'])
     assert.deepEqual(response.json(), { name: ['Ada', 'Grace'], empty: '' });
   });
 
+  test(`${type}: retains an empty first value in a repeated field`, async (t) => {
+    const app = await createServer();
+    t.after(() => app.close());
+    const response = await app.inject({
+      method: 'POST', path: '/',
+      ...payload(type, [['name', ''], ['name', 'Ada']]),
+    });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.json(), { name: ['', 'Ada'] });
+  });
+
   test(`${type}: validates parsed fields`, async (t) => {
     const app = Fastify();
     t.after(() => app.close());
